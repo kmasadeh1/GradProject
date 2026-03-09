@@ -1,0 +1,44 @@
+/* Base Font */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Login Page Gradient */
+.login-gradient {
+    background: linear-gradient(135deg, #004e92, #000428);
+}
+
+/* Sidebar Styles */
+.sidebar-bg {
+    background-color: #111827; /* Dark Navy */
+}
+
+.sidebar-link.active {
+    background-color: #1f2937;
+    border-left: 4px solid #3b82f6; /* Blue highlight */
+}
+
+/* Badge System Colors */
+.badge-high { background-color: #ffedd5; color: #c2410c; }    /* Orange */
+.badge-medium { background-color: #fef9c3; color: #a16207; }  /* Yellow */
+.badge-low { background-color: #dcfce7; color: #15803d; }     /* Green */
+.badge-critical { background-color: #fee2e2; color: #b91c1c; } /* Red */
+
+/* Status Pills */
+.status-open { background-color: #dbeafe; color: #1e40af; }       /* Blue */
+.status-progress { background-color: #f3e8ff; color: #6b21a8; }   /* Purple */
+
+/* Report Buttons */
+.btn-report {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.btn-report:hover {
+    background-color: #f9fafb;
+}
