@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - FortiGRC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <aside class="w-64 sidebar-bg text-gray-300 flex flex-col flex-shrink-0 transition-all duration-300">
+            <div class="h-16 flex items-center px-6 border-b border-gray-700">
+                <i class="fa-solid fa-shield-halved text-blue-500 text-xl mr-3"></i>
+                <span class="font-bold text-white text-lg">FortiGRC</span>
+            </div>
+
+            <nav class="flex-1 px-2 py-4 space-y-1">
+                <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="sidebar-link active flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-border-all mr-3 w-5"></i> Dashboard
+                </a>
+                <a href="#" onclick="switchTab('risks')" id="nav-risks" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-triangle-exclamation mr-3 w-5"></i> Risks
+                </a>
+                <a href="#" onclick="switchTab('reports')" id="nav-reports" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-chart-simple mr-3 w-5"></i> Reports
+                </a>
+                <a href="#" class="sidebar-link flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-gray-800 hover:text-white transition">
+                    <i class="fa-solid fa-gear mr-3 w-5"></i> Settings
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-gray-700">
+                <a href="login.html" class="flex items-center text-sm text-gray-400 hover:text-white transition">
+                    <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
+                </a>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            
+            <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8 z-10">
+                <div class="font-bold text-xl text-gray-800" id="page-header-title">Dashboard</div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center">
+                        <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">AD</div>
+                        <span class="ml-2 text-sm text-gray-600 hidden md:block">admin@fortigrc.com</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-8 bg-gray-50">
+                
+                <div id="view-dashboard" class="tab-content space-y-6">
+                    <div class="mb-2">
+                        <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                        <p class="text-gray-500 text-sm">Overview of your organization's risk status</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between">
+                            <div><p class="text-xs font-medium text-gray-500 uppercase">Total Risks</p><h3 class="text-3xl font-bold mt-2">8</h3></div>
+                            <div class="p-2 bg-blue-50 rounded-lg text-blue-600 h-10 w-10 flex items-center justify-center"><i class="fa-solid fa-shield"></i></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between">
+                            <div><p class="text-xs font-medium text-gray-500 uppercase">Critical Risks</p><h3 class="text-3xl font-bold mt-2">0</h3></div>
+                            <div class="p-2 bg-red-50 rounded-lg text-red-600 h-10 w-10 flex items-center justify-center"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between">
+                            <div><p class="text-xs font-medium text-gray-500 uppercase">High Risks</p><h3 class="text-3xl font-bold mt-2">4</h3></div>
+                            <div class="p-2 bg-orange-50 rounded-lg text-orange-600 h-10 w-10 flex items-center justify-center"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between">
+                            <div><p class="text-xs font-medium text-gray-500 uppercase">Mitigated</p><h3 class="text-3xl font-bold mt-2">2</h3></div>
+                            <div class="p-2 bg-green-50 rounded-lg text-green-600 h-10 w-10 flex items-center justify-center"><i class="fa-regular fa-circle-check"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h4 class="font-semibold text-gray-700 mb-6">Risk Distribution</h4>
+                            <div class="h-64 flex justify-center"><canvas id="chartDistribution"></canvas></div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h4 class="font-semibold text-gray-700 mb-6">Risks by Category</h4>
+                            <div class="h-64"><canvas id="chartCategory"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-risks" class="tab-content hidden space-y-6">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Risk Registry</h2>
+                            <p class="text-gray-500 text-sm">Manage and monitor all identified risks</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+                        <div class="p-4 border-b border-gray-100 bg-gray-50/50">
+                            <div class="relative max-w-md">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                                <input type="text" id="riskSearch" placeholder="Search risks..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-6 py-4">ID</th>
+                                        <th class="px-6 py-4">Risk Name</th>
+                                        <th class="px-6 py-4">Category</th>
+                                        <th class="px-6 py-4">Probability</th>
+                                        <th class="px-6 py-4">Impact</th>
+                                        <th class="px-6 py-4">Score</th>
+                                        <th class="px-6 py-4">Status</th>
+                                        <th class="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100" id="tableBody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-reports" class="tab-content hidden space-y-6">
+                    <div class="mb-2">
+                        <h2 class="text-2xl font-bold text-gray-800">Risk Reports</h2>
+                        <p class="text-gray-500 text-sm">Generate and export risk analysis reports</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                            <div class="flex items-center mb-4">
+                                <i class="fa-solid fa-chart-bar text-xl text-gray-700 mr-3"></i>
+                                <h3 class="text-lg font-bold">Summary Report</h3>
+                            </div>
+                            <p class="text-gray-500 text-sm mb-8">Overview of all risks with statistics and trends.</p>
+                            <div class="flex space-x-3">
+                                <button class="btn-report"><i class="fa-regular fa-file-pdf mr-2"></i> PDF</button>
+                                <button class="btn-report"><i class="fa-regular fa-file-excel mr-2"></i> Excel</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                            <div class="flex items-center mb-4">
+                                <i class="fa-solid fa-chart-pie text-xl text-gray-700 mr-3"></i>
+                                <h3 class="text-lg font-bold">Detailed Report</h3>
+                            </div>
+                            <p class="text-gray-500 text-sm mb-8">Complete risk registry with mitigation actions.</p>
+                            <div class="flex space-x-3">
+                                <button class="btn-report"><i class="fa-regular fa-file-pdf mr-2"></i> PDF</button>
+                                <button class="btn-report"><i class="fa-regular fa-file-excel mr-2"></i> Excel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
