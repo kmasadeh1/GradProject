@@ -1,0 +1,205 @@
+/* ============================================================
+   FortiGRC – Global Styles
+   ============================================================ */
+
+/* Base Font */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Login Page Gradient */
+.login-gradient {
+  background: linear-gradient(135deg, #004e92, #000428);
+}
+
+/* Sidebar Styles */
+.sidebar-bg {
+  background-color: #111827;
+}
+
+.sidebar-link.active {
+  background-color: #1f2937;
+  border-left: 4px solid #3b82f6;
+}
+
+/* Badge System Colors */
+.badge-high { background-color: #ffedd5; color: #c2410c; }
+.badge-medium { background-color: #fef9c3; color: #a16207; }
+.badge-low { background-color: #dcfce7; color: #15803d; }
+.badge-critical { background-color: #fee2e2; color: #b91c1c; }
+
+/* Status Pills */
+.status-open { background-color: #dbeafe; color: #1e40af; }
+.status-progress { background-color: #f3e8ff; color: #6b21a8; }
+
+/* Report Buttons */
+.btn-report {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+.btn-report:hover {
+  background-color: #f9fafb;
+}
+
+/* ============================================================
+   MODAL ANIMATIONS
+   ============================================================ */
+
+.modal-backdrop {
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+
+.modal-content {
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+}
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+   ============================================================ */
+
+.toast-enter {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.toast-visible {
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+}
+
+/* ============================================================
+   TABLE ROW HOVER
+   ============================================================ */
+
+#tableBody tr {
+  transition: background-color 0.15s ease;
+}
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+
+main::-webkit-scrollbar {
+  width: 6px;
+}
+
+main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+main::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 3px;
+}
+
+main::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+/* ============================================================
+   NUMBER INPUT – HIDE SPINNERS
+   ============================================================ */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .sidebar-bg {
+    display: none;
+  }
+}
+
+/* ============================================================
+   LOGIN / MFA PAGE ENHANCEMENTS
+   ============================================================ */
+
+/* Password Strength Meter Bar */
+.strength-bar {
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* OTP Input Focus */
+.otp-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Glassmorphism Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Gentle pulse animation for loading states */
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.pulse-gentle {
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+/* Fade-in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* ============================================================
+   EVIDENCE UPLOAD DROPZONE
+   ============================================================ */
+
+.evidence-dropzone.drag-over {
+  border-color: #3b82f6 !important;
+  background-color: rgba(59, 130, 246, 0.05) !important;
+  transform: scale(1.01);
+}
+
+.evidence-dropzone.drag-over .fa-cloud-arrow-up {
+  color: #3b82f6 !important;
+}
+
+/* Fade-in for uploaded file rows */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
