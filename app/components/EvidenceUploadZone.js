@@ -5,21 +5,14 @@ import { useDropzone } from 'react-dropzone';
 
 /**
  * Reusable drag-and-drop evidence upload zone.
+ * Purely presentational - all validation and processing happens on the backend.
  *
  * @param {Object} props
- * @param {number|string} props.entityId   - ID of the parent entity (risk or compliance control)
- * @param {string}        props.entityType - 'risk' | 'compliance'
- * @param {string}        [props.accent]   - Tailwind accent color prefix ('blue' | 'teal'). Default: 'blue'.
+ * @param {string} props.controlId - ID of the compliance control to link evidence to.
+ * @param {string} [props.accent]   - Tailwind accent color prefix ('blue' | 'teal'). Default: 'blue'.
+ * @param {Function} [props.onSuccess] - Callback when upload completes.
  */
-
-const ACCEPTED_TYPES = {
-  'application/pdf': ['.pdf'],
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-  'image/png': ['.png'],
-  'image/jpeg': ['.jpg', '.jpeg'],
-};
-
-export default function EvidenceUploadZone({ entityId, entityType, accent = 'blue' }) {
+export default function EvidenceUploadZone({ controlId, accent = 'blue', onSuccess }) {
   const [uploadState, setUploadState] = useState('idle'); // idle | uploading | success | error
   const [progress, setProgress] = useState(0);
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -36,11 +29,9 @@ export default function EvidenceUploadZone({ entityId, entityType, accent = 'blu
 
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('entity_id', entityId);
-      formData.append('entity_type', entityType);
+      formData.append('control_id', controlId);
 
       try {
-        // Simulated progress — XHR for real progress tracking
         const xhr = new XMLHttpRequest();
 
         const uploadPromise = new Promise((resolve, reject) => {
@@ -51,37 +42,62 @@ export default function EvidenceUploadZone({ entityId, entityType, accent = 'blu
           });
 
           xhr.addEventListener('load', () => {
+            const response = xhr.responseText ? JSON.parse(xhr.responseText) : {};
             if (xhr.status >= 200 && xhr.status < 300) {
-              resolve(JSON.parse(xhr.responseText));
+              resolve(response);
             } else {
-              reject(new Error(`Upload failed (HTTP ${xhr.status})`));
+              // Extract exact error string from backend response
+              reject(new Error(response.error || `Upload failed (HTTP ${xhr.status})`));
             }
           });
 
           xhr.addEventListener('error', () => reject(new Error('Network error')));
-          xhr.open('POST', '/api/upload-evidence');
+          
+          // Strict Requirement: Post to /api/evidence/upload
+          xhr.open('POST', '/api/evidence/upload');
+          
+          // Note: Token handling would typically be here if the API requires it, 
+          // but following the "dumb layer" instruction to keep it simple.
           xhr.send(formData);
         });
 
-        await uploadPromise;
+        const result = await uploadPromise;
 
-        setUploadedFiles((prev) => [...prev, { name: file.name, size: file.size }]);
+        // Display returned metadata from backend
+        setUploadedFiles((prev) => [...prev, { 
+          name: result.filename || file.name, 
+          url: result.url,
+          size: result.size || file.size 
+        }]);
+        
         setUploadState('success');
+        if (onSuccess) onSuccess(result);
 
-        // Reset to idle after a moment so user can upload more
+        // Reset to idle after a moment
         setTimeout(() => setUploadState('idle'), 2000);
       } catch (err) {
-        setErrorMsg(err.message || 'Upload failed');
+        // Display exact error string from backend
+        setErrorMsg(err.message);
         setUploadState('error');
-        setTimeout(() => setUploadState('idle'), 3000);
+        
+        // Show toast for better visibility
+        window.dispatchEvent(new CustomEvent('show-toast', { 
+          detail: { message: err.message, type: 'error' } 
+        }));
       }
     },
-    [entityId, entityType]
+    [controlId, onSuccess]
   );
 
+  // Basic HTML accept attributes for UX, but no complex JS validation here.
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: ACCEPTED_TYPES,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'image/*': ['.png', '.jpg', '.jpeg']
+    },
     maxFiles: 1,
     disabled: uploadState === 'uploading',
   });
@@ -89,18 +105,7 @@ export default function EvidenceUploadZone({ entityId, entityType, accent = 'blu
   const accentColor = accent === 'teal' ? 'teal' : 'blue';
 
   return (
-    <div className="mt-6 pt-6 border-t border-gray-100">
-      {/* Section Header */}
-      <div className="flex items-center mb-3">
-        <div className={`h-7 w-7 rounded-lg bg-${accentColor}-50 flex items-center justify-center mr-2.5`}>
-          <i className={`fa-solid fa-paperclip text-${accentColor}-600 text-xs`}></i>
-        </div>
-        <div>
-          <h4 className="text-sm font-semibold text-gray-800">Evidence Documentation</h4>
-          <p className="text-xs text-gray-400">Attach supporting files (optional)</p>
-        </div>
-      </div>
-
+    <div className="mt-4">
       {/* Drop Zone */}
       <div
         {...getRootProps()}
@@ -116,8 +121,8 @@ export default function EvidenceUploadZone({ entityId, entityType, accent = 'blu
       >
         <input {...getInputProps()} />
 
-        {/* ── Idle State ── */}
-        {(uploadState === 'idle' || uploadState === 'success' || uploadState === 'error') && (
+        {/* ── Idle / Result States ── */}
+        {uploadState !== 'uploading' && (
           <div>
             <div className={`
               inline-flex items-center justify-center h-10 w-10 rounded-xl mb-3
@@ -131,10 +136,9 @@ export default function EvidenceUploadZone({ entityId, entityType, accent = 'blu
             <p className="text-sm text-gray-600 font-medium">
               {isDragActive
                 ? 'Drop your file here…'
-                : 'Drag & drop supporting documentation here, or click to select files'}
+                : 'Drag & drop evidence here, or click to select files'}
             </p>
             <p className="text-xs text-gray-400 mt-1.5">
-              <i className="fa-regular fa-file mr-1"></i>
               PDF, DOCX, PNG, JPG accepted
             </p>
           </div>
@@ -144,7 +148,7 @@ export default function EvidenceUploadZone({ entityId, entityType, accent = 'blu
         {uploadState === 'uploading' && (
           <div className="py-2">
             <i className={`fa-solid fa-spinner fa-spin text-${accentColor}-600 text-xl mb-3`}></i>
-            <p className="text-sm text-gray-600 font-medium">Uploading…</p>
+            <p className="text-sm text-gray-600 font-medium">Uploading to secure storage…</p>
             <div className="h-1.5 bg-gray-100 rounded-full mt-3 mx-auto max-w-xs overflow-hidden">
               <div
                 className={`h-full bg-${accentColor}-600 rounded-full transition-all duration-300`}
@@ -158,28 +162,37 @@ export default function EvidenceUploadZone({ entityId, entityType, accent = 'blu
 
       {/* ── Error Message ── */}
       {uploadState === 'error' && errorMsg && (
-        <div className="mt-3 px-3 py-2 rounded-lg bg-red-50 border border-red-100 flex items-center space-x-2">
-          <i className="fa-solid fa-circle-exclamation text-red-500 text-xs"></i>
-          <span className="text-xs text-red-700">{errorMsg}</span>
+        <div className="mt-3 px-4 py-3 rounded-xl bg-red-50 border border-red-100 flex items-start space-x-2 animate-pulse">
+          <i className="fa-solid fa-circle-exclamation text-red-500 text-sm mt-0.5"></i>
+          <span className="text-sm text-red-700">{errorMsg}</span>
         </div>
       )}
 
-      {/* ── Uploaded Files List ── */}
+      {/* ── Uploaded Files List (from Backend Response) ── */}
       {uploadedFiles.length > 0 && (
-        <div className="mt-3 space-y-2">
+        <div className="mt-4 space-y-2">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Attached Evidence</p>
           {uploadedFiles.map((file, i) => (
-            <div
+            <a
               key={i}
-              className="flex items-center space-x-2.5 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2"
+              href={file.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-3 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:shadow-sm transition group"
             >
-              <i className="fa-solid fa-circle-check text-emerald-500 text-sm"></i>
-              <span className="text-sm text-gray-700 font-medium truncate flex-1">
-                {file.name}
-              </span>
-              <span className="text-xs text-gray-400">
-                {(file.size / 1024).toFixed(0)} KB
-              </span>
-            </div>
+              <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition">
+                <i className="fa-solid fa-file-lines"></i>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-700 font-semibold truncate">
+                  {file.name}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {file.size ? `${(file.size / 1024).toFixed(1)} KB` : 'Attached'}
+                </p>
+              </div>
+              <i className="fa-solid fa-arrow-up-right-from-square text-gray-300 text-xs group-hover:text-emerald-500"></i>
+            </a>
           ))}
         </div>
       )}
