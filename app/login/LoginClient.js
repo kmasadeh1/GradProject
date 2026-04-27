@@ -33,7 +33,14 @@ export default function LoginClient() {
       });
 
       if (signUpError) {
-        setError('Unable to create account. Please try again.');
+        setError(signUpError.message || 'Unable to create account. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // If email confirmation is required, session will be null
+      if (signUpData?.user && !signUpData?.session) {
+        setError('Account created! Please check your email to verify your account.');
         setLoading(false);
         return;
       }

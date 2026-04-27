@@ -5,6 +5,14 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
+    // ── RBAC Check: Ensure explicitly authorized roles ──
+    const { data: { user } } = await supabase.auth.getUser();
+    const role = user?.user_metadata?.role?.toLowerCase();
+    
+    if (!user || (role !== 'admin' && role !== 'super_admin')) {
+      return NextResponse.json({ error: 'Unauthorized: Insufficient permissions' }, { status: 403 });
+    }
+
     // Fetch all risks ordered by quantitative_score descending
     const { data: risks, error: risksError } = await supabase
       .from('risks')
