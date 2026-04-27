@@ -23,6 +23,15 @@ export default function MfaEnrollClient() {
   }, []);
 
   const startEnrollment = async () => {
+    // Guard: ensure a valid session exists before calling mfa.enroll()
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+    if (sessionError || !sessionData?.session) {
+      // No active session — redirect to login so the user authenticates first
+      router.push('/login');
+      return;
+    }
+
     const { data, error: enrollError } = await supabase.auth.mfa.enroll({
       factorType: 'totp',
       friendlyName: 'FortiGRC Authenticator',

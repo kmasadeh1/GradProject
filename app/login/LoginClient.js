@@ -24,9 +24,12 @@ export default function LoginClient() {
 
     if (mode === 'signup') {
       // ── SIGN UP ──
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
       });
 
       if (signUpError) {
@@ -35,7 +38,12 @@ export default function LoginClient() {
         return;
       }
 
-      router.push('/mfa/enroll');
+      // NOTE: MFA enrollment is skipped here because mfa.enroll() requires an
+      // active session, which may not exist until the user confirms their email.
+      // Once signed up (and confirmed), the sign-in flow handles MFA.
+      // MFA enrollment redirect commented out for demo:
+      // router.push('/mfa/enroll');
+      router.push('/dashboard');
     } else {
       // ── SIGN IN ──
       const { error: signInError } = await supabase.auth.signInWithPassword({
