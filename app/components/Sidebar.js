@@ -47,13 +47,13 @@ export default function Sidebar() {
   };
 
   const menuItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: 'fa-border-all', always: true },
-    { name: 'Risks', path: '/risks', icon: 'fa-triangle-exclamation', always: true },
-    { name: 'Incidents', path: '/incidents', icon: 'fa-triangle-exclamation', always: true },
-    { name: 'Reports', path: '/reports', icon: 'fa-chart-simple', always: true },
-    { name: 'Compliance', path: '/compliance', icon: 'fa-clipboard-check', roles: ['admin', 'auditor'] },
-    { name: 'Assessments', path: '/assessments', icon: 'fa-clipboard-list', roles: ['admin', 'auditor'] },
-    { name: 'Settings', path: '/settings', icon: 'fa-gear', roles: ['admin'] },
+    { name: 'Dashboard',    path: '/dashboard',   icon: 'fa-border-all',         always: true },
+    { name: 'Risks',        path: '/risks',        icon: 'fa-triangle-exclamation', always: true },
+    { name: 'Incidents',    path: '/incidents',    icon: 'fa-triangle-exclamation', always: true },
+    { name: 'Reports',      path: '/reports',      icon: 'fa-chart-simple',       always: true },
+    { name: 'Compliance',   path: '/compliance',   icon: 'fa-clipboard-check',    roles: ['admin', 'super_admin', 'auditor'] },
+    { name: 'Assessments',  path: '/assessments',  icon: 'fa-clipboard-list',     roles: ['admin', 'super_admin', 'auditor'] },
+    { name: 'Settings',     path: '/settings',     icon: 'fa-gear',               roles: ['admin', 'super_admin'] },
   ];
 
   return (
@@ -70,8 +70,11 @@ export default function Sidebar() {
           </div>
         ) : (
           menuItems.map((item) => {
-            // Check visibility
-            const isVisible = item.always || (item.roles && item.roles.includes(userRole));
+            // super_admin always has full access; otherwise check the roles array
+            const isVisible =
+              item.always ||
+              userRole === 'super_admin' ||
+              (item.roles && item.roles.includes(userRole));
             if (!isVisible) return null;
 
             const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`);
