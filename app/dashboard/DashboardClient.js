@@ -26,7 +26,7 @@ function DashboardContent({ view = 'dashboard' }) {
 
   const [userEmail, setUserEmail] = useState(null);
   const [fullName, setFullName] = useState('');
-  const [userRole, setUserRole] = useState('Viewer');
+  const [userRole, setUserRole] = useState(null); // null = loading; set after profile fetch
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const dropdownRef = useRef(null);
@@ -55,11 +55,17 @@ function DashboardContent({ view = 'dashboard' }) {
                 setAvatarUrl(profileData.avatar_url);
               }
               if (profileData.role) {
+                console.log('[DashboardClient] userRole resolved:', profileData.role);
                 setUserRole(profileData.role);
+              } else {
+                // Profile has no role — fall back to Viewer
+                console.warn('[DashboardClient] No role in profile response, defaulting to Viewer');
+                setUserRole('Viewer');
               }
             }
           } catch (e) {
-            console.error('Failed to fetch profile', e);
+            console.error('[DashboardClient] Failed to fetch profile, defaulting role to Viewer:', e);
+            setUserRole('Viewer');
           }
         }
       }

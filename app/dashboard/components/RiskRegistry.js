@@ -152,15 +152,14 @@ export default function RiskRegistry({ userRole }) {
           <p className="text-gray-500 text-sm mt-1">Quantitative risk analysis and management</p>
         </div>
 
-        {userRole !== 'Viewer' && (
-          <button
-            id="btn-add-risk"
-            onClick={() => { setSelectedRisk(null); setIsModalOpen(true); }}
-            className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
-          >
-            <i className="fa-solid fa-plus mr-2" /> Add New Risk
-          </button>
-        )}
+        <button
+          id="btn-add-risk"
+          onClick={() => { setSelectedRisk(null); setIsModalOpen(true); }}
+          className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
+          style={{ display: 'block' }}
+        >
+          <i className="fa-solid fa-plus mr-2" /> Add New Risk
+        </button>
       </div>
 
       {/* Table card */}
@@ -234,7 +233,7 @@ export default function RiskRegistry({ userRole }) {
                       <p className="text-gray-400 text-sm mb-4">
                         {searchQuery ? 'No risks match your search.' : 'Add your first quantitative risk assessment to get started.'}
                       </p>
-                      {!searchQuery && userRole !== 'Viewer' && (
+                      {!searchQuery && userRole && userRole !== 'Viewer' && (
                         <button
                           onClick={() => { setSelectedRisk(null); setIsModalOpen(true); }}
                           className="text-sm text-blue-600 hover:text-blue-800 font-medium"

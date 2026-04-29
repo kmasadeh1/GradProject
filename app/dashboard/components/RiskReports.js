@@ -13,14 +13,29 @@ export default function RiskReports() {
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
 
-    const res = await fetch('http://localhost:3000/api/risks', {
+    // Use a relative URL — this component runs on the same origin as the
+    // Next.js frontend, so '/api/risks' resolves correctly in all environments
+    // (local, staging, production). A hardcoded localhost:3000 would break
+    // whenever the port or host changes.
+    const res = await fetch('/api/risks', {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       }
     });
 
-    if (!res.ok) throw new Error(`Failed to fetch risks: ${res.status}`);
+    if (!res.ok) {
+      // Read the response body so the real failure reason is visible in the
+      // alert rather than always showing the generic "Failed to fetch risks".
+      let detail = '';
+      try {
+        const body = await res.json();
+        detail = body.details || body.error || res.statusText;
+      } catch {
+        detail = res.statusText || res.status;
+      }
+      throw new Error(`Failed to load report data (${res.status}): ${detail}`);
+    }
     return res.json();
   }
 

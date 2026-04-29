@@ -20,7 +20,6 @@ function scoreColor(score) {
 // ---------------------------------------------------------------------------
 export default function Assessments({ userRole }) {
   const [assessment, setAssessment]     = useState(null);   // current pending assessment from backend
-  const [history, setHistory]           = useState([]);      // previous submission records from backend
   const [answers, setAnswers]           = useState({});      // raw user selections keyed by question id
   const [loading, setLoading]           = useState(true);
   const [submitting, setSubmitting]     = useState(false);
@@ -67,12 +66,7 @@ export default function Assessments({ userRole }) {
           }));
         }
 
-        // Fetch history
-        const historyRes = await fetch('/api/assessments/history', { headers: authHeader });
-        if (historyRes.ok && mounted) {
-          const hJson = await historyRes.json();
-          setHistory(Array.isArray(hJson) ? hJson : (hJson.history ?? []));
-        }
+
       } catch (err) {
         console.error('Failed to load assessments:', err);
       } finally {
@@ -146,14 +140,7 @@ export default function Assessments({ userRole }) {
           message:         data.message         ?? 'Assessment completed.',
         });
 
-        // Refresh history using backend response
-        const hRes = await fetch('/api/assessments/history', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (hRes.ok) {
-          const hData = await hRes.json();
-          setHistory(Array.isArray(hData) ? hData : (hData.history ?? []));
-        }
+
       } else {
         const contentType = res.headers.get('content-type') || '';
         const errMsg = contentType.includes('application/json')
@@ -199,10 +186,10 @@ export default function Assessments({ userRole }) {
         <p className="text-gray-500 text-sm">Conduct audits and generate automated risk profiles</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
 
         {/* ── Assessment form ──────────────────────────────────── */}
-        <div className="col-span-1 lg:col-span-2">
+        <div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 
             {/* Card header */}
@@ -295,55 +282,7 @@ export default function Assessments({ userRole }) {
           </div>
         </div>
 
-        {/* ── History sidebar ──────────────────────────────────── */}
-        <div className="col-span-1">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex items-center space-x-2">
-              <i className="fa-solid fa-clock-rotate-left text-gray-400" />
-              <h3 className="font-bold text-gray-800">Assessment History</h3>
-            </div>
 
-            <div className="p-4 space-y-3">
-              {loading ? (
-                <div className="text-center text-gray-400 py-4 text-sm">
-                  <i className="fa-solid fa-spinner fa-spin mr-2" />Loading history…
-                </div>
-              ) : history.length === 0 ? (
-                <div className="text-center text-gray-400 py-6 text-sm">
-                  <i className="fa-solid fa-inbox text-2xl mb-2 block" />
-                  No previous assessments found.
-                </div>
-              ) : (
-                history.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-4 rounded-xl border border-gray-100 bg-gray-50 hover:bg-white transition cursor-default"
-                  >
-                    <h4 className="text-sm font-semibold text-gray-800 mb-2 truncate">{item.title}</h4>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-500">
-                        <i className="fa-regular fa-calendar mr-1" />
-                        {item.completed_at
-                          ? new Date(item.completed_at).toLocaleDateString()
-                          : '—'}
-                      </span>
-                      {/* Score rendered verbatim from backend — no calculation */}
-                      {item.score != null && (
-                        <span className={`text-xs font-bold px-2 py-1 rounded ${scoreColor(item.score)}`}>
-                          {item.score}
-                        </span>
-                      )}
-                    </div>
-                    {/* Status string from backend */}
-                    {item.status && (
-                      <p className="text-xs text-gray-400 mt-1 capitalize">{item.status}</p>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ── Submit result modal ──────────────────────────────────── */}

@@ -209,15 +209,14 @@ export default function ComplianceManagement({ userRole }) {
             <i className={`fa-solid fa-arrows-rotate ${loading ? 'fa-spin' : ''}`} />
           </button>
 
-          {userRole !== 'Viewer' && (
-            <button
-              id="btn-add-compliance"
-              onClick={() => { setSelectedControl(null); setIsModalOpen(true); }}
-              className="inline-flex items-center px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
-            >
-              <i className="fa-solid fa-plus mr-2" /> Add Control
-            </button>
-          )}
+          <button
+            id="btn-add-compliance"
+            onClick={() => { setSelectedControl(null); setIsModalOpen(true); }}
+            className="inline-flex items-center px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
+            style={{ display: 'block' }}
+          >
+            <i className="fa-solid fa-plus mr-2" /> Add Control
+          </button>
         </div>
       </div>
 

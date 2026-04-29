@@ -206,55 +206,6 @@ export default function Settings({ onAvatarUpdate, currentAvatar, userRole }) {
           </div>
         </div>
 
-        {/* SECTION 3: API Integration */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 col-span-1 lg:col-span-2">
-          <div className="flex items-center mb-4">
-            <div className="h-8 w-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mr-3">
-              <i className="fa-solid fa-plug"></i>
-            </div>
-            <h3 className="text-lg font-bold text-gray-800">External Data Ingestion</h3>
-          </div>
-          <p className="text-sm text-gray-500 mb-6">Configure external vulnerability scanners (e.g. Tenable, Qualys) to push findings directly into FortiGRC.</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Webhook URL</label>
-                <div className="pl-4 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between">
-                    <code className="text-sm text-gray-600 select-all">http://localhost:3000/api/ingest/vulnerabilities</code>
-                    <button onClick={() => { navigator.clipboard.writeText('http://localhost:3000/api/ingest/vulnerabilities'); window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'URL Copied', type: 'success' } })); }} className="text-gray-400 hover:text-blue-600 transition p-1.5" title="Copy URL">
-                        <i className="fa-regular fa-copy"></i>
-                    </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">API Key (INGEST_SECRET)</label>
-                <div className="pl-4 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between">
-                    <code className="text-sm text-gray-600 tracking-wider">fk_live_89a3x...</code>
-                    <button onClick={() => { navigator.clipboard.writeText('fk_live_89a3x_dummy_secret_key'); window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'API Key Copied', type: 'success' } })); }} className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded text-xs font-semibold transition">
-                        Copy API Key
-                    </button>
-                </div>
-                <p className="text-xs text-gray-400 mt-2">Pass this key in the Authorization header as a Bearer token.</p>
-              </div>
-            </div>
-            
-            <div className="bg-gray-900 rounded-lg p-5 overflow-x-auto relative shadow-inner">
-                <span className="absolute top-2 right-3 text-[10px] text-gray-500 font-mono uppercase tracking-widest">Payload Format</span>
-<pre className="text-green-400 text-[11px] font-mono leading-relaxed mt-2">
-{`{
-  "scanner": "Tenable.io",
-  "vulnerability_id": "CVE-2023-1234",
-  "title": "Critical RCE in Web Server",
-  "severity_level": "Critical",
-  "likelihood": 5,
-  "impact": 5,
-  "jncsf_capability": "Operations"
-}`}
-</pre>
-            </div>
-          </div>
-        </div>
 
       </div>
     </div>

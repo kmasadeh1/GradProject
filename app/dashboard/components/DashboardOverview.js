@@ -51,7 +51,11 @@ export default function DashboardOverview() {
         const res = await fetch('/api/risks', {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
-        if (!res.ok) throw new Error('Failed to fetch risks');
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('API Risks Error:', res.status, errorText);
+          throw new Error(`Failed to fetch risks: ${res.status} - ${errorText}`);
+        }
         const data = await res.json();
         setRisks(Array.isArray(data) ? data : []);
       } catch (err) {

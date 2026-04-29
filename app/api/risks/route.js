@@ -5,12 +5,16 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    // ── RBAC Check: Ensure explicitly authorized roles ──
+    // ── Auth check: any authenticated user may read their own risks ──
+    // Ownership scoping is enforced by the Supabase RLS policy
+    // (auth.uid() = user_id), so no role check is needed here.
     const { data: { user } } = await supabase.auth.getUser();
-    const role = user?.user_metadata?.role?.toLowerCase();
-    
-    if (!user || (role !== 'admin' && role !== 'super_admin')) {
-      return NextResponse.json({ error: 'Unauthorized: Insufficient permissions' }, { status: 403 });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHENTICATED' },
+        { status: 401 }
+      );
     }
 
     // Fetch all risks ordered by quantitative_score descending
@@ -20,29 +24,36 @@ export async function GET() {
       .order('quantitative_score', { ascending: false });
 
     if (risksError) {
-      console.error('Error fetching risks:', risksError);
-      return NextResponse.json({ error: 'Failed to fetch risks' }, { status: 500 });
+      // Log the raw Supabase error so the exact failure is visible in server logs
+      console.error('Export Crash — risks query failed:', risksError);
+      return NextResponse.json(
+        { error: 'Failed to fetch risks', details: risksError.message },
+        { status: 500 }
+      );
     }
 
-    // Fetch evidence documentation for risks
+    // Fetch evidence files linked to risks.
+    // The evidence_documentation table (migration 003) uses `risk_id` as the
+    // FK to risks — NOT `entity_id` / `entity_type` (those belong to the
+    // separate `evidence` table added in migration 008).
     const { data: evidence, error: evidenceError } = await supabase
       .from('evidence_documentation')
-      .select('entity_id, file_url')
-      .eq('entity_type', 'Risk');
+      .select('risk_id, file_url');
 
     if (evidenceError) {
-      console.error('Error fetching evidence for risks:', evidenceError);
-      return NextResponse.json({ error: 'Failed to fetch evidence documentation' }, { status: 500 });
+      console.error('Export Crash — evidence query failed:', evidenceError);
+      return NextResponse.json(
+        { error: 'Failed to fetch evidence documentation', details: evidenceError.message },
+        { status: 500 }
+      );
     }
 
-    // Merge evidence into risks
+    // Merge evidence files into their parent risk rows
     const risksWithEvidence = risks.map((risk) => {
-      // Find all file URLs associated with this risk
-      const riskEvidence = evidence.filter((e) => e.entity_id === risk.id);
+      const riskEvidence = (evidence || []).filter((e) => e.risk_id === risk.id);
       return {
         ...risk,
-        // Typically there might be one or multiple files. We store them in an array
-        file_urls: riskEvidence.map((e) => e.file_url)
+        file_urls: riskEvidence.map((e) => e.file_url),
       };
     });
 
