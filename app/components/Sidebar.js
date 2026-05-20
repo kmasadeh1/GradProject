@@ -21,7 +21,9 @@ export default function Sidebar() {
       }
       
       try {
-        const res = await fetch('/api/profile', {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+        const profileUrl = backendUrl ? `${backendUrl}/api/profile` : '/api/profile';
+        const res = await fetch(profileUrl, {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
         if (res.ok) {
@@ -46,14 +48,21 @@ export default function Sidebar() {
     router.push('/login');
   };
 
+  const roleBadgeMap = {
+    super_admin: { label: 'Super Admin', color: 'bg-red-600' },
+    admin:       { label: 'Admin',       color: 'bg-orange-500' },
+    user:        { label: 'User',        color: 'bg-gray-500' },
+  };
+
   const menuItems = [
     { name: 'Dashboard',    path: '/dashboard',   icon: 'fa-border-all',         always: true },
     { name: 'Risks',        path: '/risks',        icon: 'fa-triangle-exclamation', always: true },
     { name: 'Incidents',    path: '/incidents',    icon: 'fa-triangle-exclamation', always: true },
     { name: 'Reports',      path: '/reports',      icon: 'fa-chart-simple',       always: true },
-    { name: 'Compliance',   path: '/compliance',   icon: 'fa-clipboard-check',    roles: ['admin', 'super_admin', 'auditor'] },
-    { name: 'Assessments',  path: '/assessments',  icon: 'fa-clipboard-list',     roles: ['admin', 'super_admin', 'auditor'] },
+    { name: 'Compliance',   path: '/compliance',   icon: 'fa-clipboard-check',    roles: ['admin', 'super_admin'] },
+    { name: 'Assessments',  path: '/assessments',  icon: 'fa-clipboard-list',     roles: ['admin', 'super_admin'] },
     { name: 'Settings',     path: '/settings',     icon: 'fa-gear',               roles: ['admin', 'super_admin'] },
+    { name: 'Admin Panel', path: '/admin',         icon: 'fa-users-gear',         roles: ['super_admin'] },
   ];
 
   return (
@@ -91,7 +100,14 @@ export default function Sidebar() {
         )}
       </nav>
 
-      <div className="p-4 border-t border-gray-700">
+      <div className="p-4 border-t border-gray-700 space-y-3">
+        {userRole && roleBadgeMap[userRole] && (
+          <div>
+            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold text-white ${roleBadgeMap[userRole].color}`}>
+              {roleBadgeMap[userRole].label}
+            </span>
+          </div>
+        )}
         <a href="#" onClick={handleLogout} className="flex items-center text-sm text-gray-400 hover:text-white transition">
            <i className="fa-solid fa-right-from-bracket mr-2"></i> Logout
         </a>

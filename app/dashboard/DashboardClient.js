@@ -91,7 +91,14 @@ function DashboardContent({ view = 'dashboard' }) {
       if (!container) return;
       const toast = document.createElement('div');
       toast.className = `p-4 rounded-xl shadow-lg text-white text-sm font-medium transition-all duration-300 transform translate-y-0 opacity-100 ${type === 'error' ? 'bg-red-600' : 'bg-emerald-600'}`;
-      toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'} mr-2"></i>${message}`;
+
+      const icon = document.createElement('i');
+      icon.className = `fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'} mr-2`;
+
+      const text = document.createTextNode(String(message));
+
+      toast.appendChild(icon);
+      toast.appendChild(text);
       container.appendChild(toast);
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-2');

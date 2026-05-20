@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import RiskModal from './RiskModal';
 import WaiverModal from './WaiverModal';
@@ -18,6 +19,7 @@ function getRiskLevelBadgeClass(level) {
 }
 
 export default function RiskRegistry({ userRole }) {
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen]               = useState(false);
   const [isWaiverModalOpen, setIsWaiverModalOpen]   = useState(false);
   const [selectedRisk, setSelectedRisk]             = useState(null);
@@ -113,6 +115,13 @@ export default function RiskRegistry({ userRole }) {
       if (res.ok) {
         fetchRisks();
       } else {
+        if (res.status === 401) { router.push('/login'); return; }
+        if (res.status === 403) {
+          window.dispatchEvent(new CustomEvent('show-toast', {
+            detail: { message: "Access Denied: You don't have permission to perform this action.", type: 'error' },
+          }));
+          return;
+        }
         const errorData = await res.json().catch(() => ({}));
         window.dispatchEvent(new CustomEvent('show-toast', {
           detail: { message: errorData.error || `Failed to delete risk (${res.status})`, type: 'error' },
@@ -201,15 +210,15 @@ export default function RiskRegistry({ userRole }) {
                 </th>
                 <th
                   className="px-6 py-4 cursor-pointer select-none hover:text-blue-600"
-                  onClick={() => handleSort('inherent_risk_score')}
+                  onClick={() => handleSort('quantitative_score')}
                 >
-                  Inherent Risk Score <SortIcon field="inherent_risk_score" />
+                  Inherent Risk Score <SortIcon field="quantitative_score" />
                 </th>
                 <th
                   className="px-6 py-4 cursor-pointer select-none hover:text-blue-600"
-                  onClick={() => handleSort('risk_level')}
+                  onClick={() => handleSort('severity_level')}
                 >
-                  Risk Level <SortIcon field="risk_level" />
+                  Risk Level <SortIcon field="severity_level" />
                 </th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -267,16 +276,16 @@ export default function RiskRegistry({ userRole }) {
 
                     {/* Inherent risk score — rendered exactly as returned by the backend */}
                     <td className="px-6 py-4 font-semibold text-gray-800 tabular-nums">
-                      {risk.inherent_risk_score ?? (
+                      {risk.quantitative_score ?? (
                         <span className="text-gray-300 italic">—</span>
                       )}
                     </td>
 
                     {/* Risk level badge — colour mapped from backend string, no calculation */}
                     <td className="px-6 py-4">
-                      {risk.risk_level ? (
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getRiskLevelBadgeClass(risk.risk_level)}`}>
-                          {risk.risk_level}
+                      {risk.severity_level ? (
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getRiskLevelBadgeClass(risk.severity_level)}`}>
+                          {risk.severity_level}
                         </span>
                       ) : (
                         <span className="text-gray-300 italic text-xs">—</span>

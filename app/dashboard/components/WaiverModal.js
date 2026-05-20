@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { sanitizeInput } from '@/lib/sanitize';
 
 export default function WaiverModal({ risk, onClose, onSuccess }) {
   const [justification, setJustification] = useState('');
@@ -30,7 +31,7 @@ export default function WaiverModal({ risk, onClose, onSuccess }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ risk_id: risk.id, justification, expiration })
+        body: JSON.stringify({ risk_id: risk.id, justification: sanitizeInput(justification), expiration })
       });
 
       if (res.ok) {

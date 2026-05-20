@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { sanitizeInput } from '@/lib/sanitize';
 
 export default function RiskModal({ onClose, onSuccess, initialData = null }) {
   const isEdit = !!initialData?.id;
@@ -34,9 +35,12 @@ export default function RiskModal({ onClose, onSuccess, initialData = null }) {
       return;
     }
 
+    const cleanTitle = sanitizeInput(title);
+    const cleanDescription = sanitizeInput(description);
+
     const payload = {
-      title,
-      description,
+      title: cleanTitle,
+      description: cleanDescription,
       jncsf_capability: capability,
       likelihood: Number(likelihood),
       impact: Number(impact),

@@ -4,62 +4,79 @@ import { createClient } from '@/lib/supabase/server';
 export async function GET() {
   try {
     const supabase = await createClient();
-
-    // ── Auth check: any authenticated user may read their own risks ──
-    // Ownership scoping is enforced by the Supabase RLS policy
-    // (auth.uid() = user_id), so no role check is needed here.
     const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Authentication required', code: 'UNAUTHENTICATED' }, { status: 401 });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required', code: 'UNAUTHENTICATED' },
-        { status: 401 }
-      );
-    }
-
-    // Fetch all risks ordered by quantitative_score descending
     const { data: risks, error: risksError } = await supabase
       .from('risks')
       .select('*')
-      .order('quantitative_score', { ascending: false });
+      .order('quantitative_score', { ascending: false, nullsFirst: false });
 
-    if (risksError) {
-      // Log the raw Supabase error so the exact failure is visible in server logs
-      console.error('Export Crash — risks query failed:', risksError);
-      return NextResponse.json(
-        { error: 'Failed to fetch risks', details: risksError.message },
-        { status: 500 }
-      );
-    }
+    if (risksError) return NextResponse.json({ error: 'Failed to fetch risks', details: risksError.message }, { status: 500 });
 
-    // Fetch evidence files linked to risks.
-    // The evidence_documentation table (migration 003) uses `risk_id` as the
-    // FK to risks — NOT `entity_id` / `entity_type` (those belong to the
-    // separate `evidence` table added in migration 008).
-    const { data: evidence, error: evidenceError } = await supabase
-      .from('evidence_documentation')
-      .select('risk_id, file_url');
+    const { data: evidence } = await supabase.from('evidence_documentation').select('risk_id, file_url');
 
-    if (evidenceError) {
-      console.error('Export Crash — evidence query failed:', evidenceError);
-      return NextResponse.json(
-        { error: 'Failed to fetch evidence documentation', details: evidenceError.message },
-        { status: 500 }
-      );
-    }
-
-    // Merge evidence files into their parent risk rows
-    const risksWithEvidence = risks.map((risk) => {
-      const riskEvidence = (evidence || []).filter((e) => e.risk_id === risk.id);
-      return {
-        ...risk,
-        file_urls: riskEvidence.map((e) => e.file_url),
-      };
-    });
+    const risksWithEvidence = (risks || []).map((risk) => ({
+      ...risk,
+      file_urls: (evidence || []).filter((e) => e.risk_id === risk.id).map((e) => e.file_url),
+    }));
 
     return NextResponse.json(risksWithEvidence, { status: 200 });
   } catch (err) {
-    console.error('Unexpected error in GET /api/risks:', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+
+    let body;
+    try { body = await request.json(); }
+    catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }); }
+
+    const { title, description, jncsf_capability, likelihood, impact } = body;
+
+    if (!title || !jncsf_capability || likelihood == null || impact == null) {
+      return NextResponse.json({ error: 'Missing required fields: title, jncsf_capability, likelihood, impact' }, { status: 400 });
+    }
+
+    const l = Number(likelihood);
+    const i = Number(impact);
+    const quantitative_score = l * i;
+    let severity_level;
+    if (quantitative_score >= 20) severity_level = 'Critical';
+    else if (quantitative_score >= 12) severity_level = 'High';
+    else if (quantitative_score >= 6) severity_level = 'Medium';
+    else severity_level = 'Low';
+
+    const { data, error } = await supabase
+      .from('risks')
+      .insert({
+        user_id: user.id,
+        title: title.trim(),
+        description: description?.trim() ?? null,
+        jncsf_capability,
+        likelihood: l,
+        impact: i,
+        quantitative_score,
+        severity_level,
+        source: 'Manual',
+        status: 'Open',
+      })
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error('POST /api/risks insert error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data, { status: 201 });
+  } catch (err) {
+    console.error('POST /api/risks unexpected error:', err);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

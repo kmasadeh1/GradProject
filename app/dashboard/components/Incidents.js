@@ -1,8 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { sanitizeInput } from '@/lib/sanitize';
 
 export default function Incidents({ userRole }) {
+  const router = useRouter();
   const [incidents, setIncidents] = useState([]);
   const [risks, setRisks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,8 +86,8 @@ export default function Incidents({ userRole }) {
       const { data: { session } } = await supabase.auth.getSession();
       
       const payload = {
-        title: formData.title,
-        description: formData.description,
+        title: sanitizeInput(formData.title),
+        description: sanitizeInput(formData.description),
         severity: formData.severity,
         status: 'Open',
       };
@@ -109,7 +112,12 @@ export default function Incidents({ userRole }) {
         setIsModalOpen(false);
         setFormData({ title: '', description: '', severity: 'Medium', risk_id: '' });
       } else {
-        const data = await res.json();
+        if (res.status === 401) { router.push('/login'); return; }
+        if (res.status === 403) {
+          window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: "Access Denied: You don't have permission to perform this action.", type: 'error' } }));
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
         window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.error || 'Failed to report', type: 'error' } }));
       }
     } catch (err) {
@@ -145,6 +153,11 @@ export default function Incidents({ userRole }) {
       } else {
         // Revert optimistic update on failure by re-fetching real state
         await fetchIncidents(session?.access_token);
+        if (res.status === 401) { router.push('/login'); return; }
+        if (res.status === 403) {
+          window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: "Access Denied: You don't have permission to perform this action.", type: 'error' } }));
+          return;
+        }
         window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: 'Failed to update status', type: 'error' } }));
       }
     } catch (err) {

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { sanitizeInput } from '@/lib/sanitize';
 
 // Status options are static display values.
 // The backend determines what is valid and returns errors if the value is wrong.
@@ -73,9 +74,9 @@ export default function ComplianceModal({ onClose, onSuccess, initialData = null
 
     // Payload — raw form values, no derived calculations
     const payload = isEdit
-      ? { status, notes }                                            // update: only status & notes
-      : { control_name: controlName, risk_id: riskId || null,       // create: full fields
-          select_principle: principle, status, notes };
+      ? { status, notes: sanitizeInput(notes) }
+      : { control_name: sanitizeInput(controlName), risk_id: riskId || null,
+          select_principle: principle, status, notes: sanitizeInput(notes) };
 
     // Route: spec says POST/PUT /api/compliance/controls/[id]
     // Fallback to /api/compliance for creation if the sub-route doesn't exist yet

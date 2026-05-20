@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 // ---------------------------------------------------------------------------
@@ -19,6 +20,7 @@ function scoreColor(score) {
 // Main component
 // ---------------------------------------------------------------------------
 export default function Assessments({ userRole }) {
+  const router = useRouter();
   const [assessment, setAssessment]     = useState(null);   // current pending assessment from backend
   const [answers, setAnswers]           = useState({});      // raw user selections keyed by question id
   const [loading, setLoading]           = useState(true);
@@ -142,6 +144,13 @@ export default function Assessments({ userRole }) {
 
 
       } else {
+        if (res.status === 401) { router.push('/login'); return; }
+        if (res.status === 403) {
+          window.dispatchEvent(new CustomEvent('show-toast', {
+            detail: { message: "Access Denied: You don't have permission to perform this action.", type: 'error' },
+          }));
+          return;
+        }
         const contentType = res.headers.get('content-type') || '';
         const errMsg = contentType.includes('application/json')
           ? (await res.json()).error
