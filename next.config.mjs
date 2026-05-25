@@ -1,36 +1,25 @@
 /** @type {import('next').NextConfig} */
 
+const isDev = process.env.NODE_ENV === 'development';
+
 const securityHeaders = [
   {
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",  // unsafe-inline needed for Next.js
-      "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
-      "font-src 'self' https://cdnjs.cloudflare.com",
+      isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "font-src 'self' data:",
       "img-src 'self' data: blob: https://*.supabase.co",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co http://localhost:3001",
-      "frame-ancestors 'none'",   // prevents clickjacking
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co http://localhost:3000 http://localhost:3001",
+      "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
     ].join('; '),
   },
-  {
-    key: 'X-Content-Type-Options',
-    value: 'nosniff',   // prevents MIME sniffing attacks
-  },
-  {
-    key: 'X-Frame-Options',
-    value: 'DENY',      // prevents clickjacking
-  },
-  {
-    key: 'Referrer-Policy',
-    value: 'strict-origin-when-cross-origin',
-  },
-  {
-    key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=()',
-  },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
 ];
 
 const nextConfig = {
