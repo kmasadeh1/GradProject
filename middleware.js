@@ -10,7 +10,17 @@ import { NextResponse } from 'next/server';
  * - Redirects already-authenticated users away from /login → /dashboard
  */
 
-const PROTECTED_ROUTES = ['/dashboard', '/risks', '/compliance', '/settings'];
+const PROTECTED_ROUTES = [
+  '/dashboard',
+  '/risks',
+  '/compliance',
+  '/settings',
+  '/incidents',
+  '/reports',
+  '/assessments',
+  '/admin',
+  '/waivers',
+];
 
 export async function middleware(request) {
   let response = NextResponse.next({
@@ -78,6 +88,11 @@ export const config = {
     '/risks/:path*',
     '/compliance/:path*',
     '/settings/:path*',
+    '/incidents/:path*',
+    '/reports/:path*',
+    '/assessments/:path*',
+    '/admin/:path*',
+    '/waivers/:path*',
     '/login',
     '/mfa/:path*',
   ],

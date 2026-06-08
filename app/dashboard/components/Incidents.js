@@ -221,17 +221,26 @@ export default function Incidents({ userRole }) {
                     <i className="fa-regular fa-clock mr-1"></i>
                     {new Date(inc.created_at).toLocaleDateString()}
                   </span>
-                  
-                  {/* Status dropdown — changes column instantly */}
-                  <select
-                    value={inc.status}
-                    onChange={(e) => handleStatusChange(inc.id, e.target.value)}
-                    className="text-[10px] font-semibold border border-gray-200 rounded px-1.5 py-0.5 bg-white text-gray-600 cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition"
-                  >
-                    <option value="Open">Open</option>
-                    <option value="Investigating">Investigating</option>
-                    <option value="Resolved">Resolved</option>
-                  </select>
+
+                  {userRole === 'admin' || userRole === 'super_admin' ? (
+                    <select
+                      value={inc.status}
+                      onChange={(e) => handleStatusChange(inc.id, e.target.value)}
+                      className="text-[10px] font-semibold border border-gray-200 rounded px-1.5 py-0.5 bg-white text-gray-600 cursor-pointer hover:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition"
+                    >
+                      <option value="Open">Open</option>
+                      <option value="Investigating">Investigating</option>
+                      <option value="Resolved">Resolved</option>
+                    </select>
+                  ) : (
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      inc.status === 'Resolved'     ? 'bg-emerald-100 text-emerald-700' :
+                      inc.status === 'Investigating' ? 'bg-yellow-100 text-yellow-700'  :
+                                                       'bg-red-100 text-red-700'
+                    }`}>
+                      {inc.status === 'Investigating' ? 'Under Investigation' : inc.status}
+                    </span>
+                  )}
                 </div>
               </div>
             ))

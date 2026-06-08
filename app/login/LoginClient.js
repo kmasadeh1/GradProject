@@ -71,10 +71,8 @@ export default function LoginClient() {
       if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel === 'aal1') {
         // MFA enrolled → needs challenge verification
         router.push('/mfa/challenge');
-      } else if (aalData?.currentLevel === 'aal1' && aalData?.nextLevel === 'aal1') {
-        // No MFA enrolled → redirect to enrollment
-        router.push('/mfa/enroll');
       } else {
+        // No MFA enrolled (or already at aal2) → go to dashboard; enrollment is optional
         router.push('/dashboard');
       }
     }

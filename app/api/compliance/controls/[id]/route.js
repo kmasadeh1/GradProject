@@ -8,30 +8,22 @@ export async function PUT(request, { params }) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
+
     let body;
     try { body = await request.json(); }
     catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
 
-    const allowed = ['title', 'description', 'jncsf_capability', 'likelihood', 'impact', 'status'];
-    const updates = {};
-    for (const key of allowed) {
-      if (body[key] !== undefined) updates[key] = body[key];
-    }
+    const { control_name, risk_id, jncsf_principle, compliance_status, notes } = body;
 
-    // Recalculate score if likelihood or impact changed
-    if (updates.likelihood || updates.impact) {
-      const { data: existing } = await supabase.from('risks').select('likelihood, impact').eq('id', id).single();
-      const l = Number(updates.likelihood ?? existing.likelihood);
-      const i = Number(updates.impact ?? existing.impact);
-      updates.quantitative_score = l * i;
-      if (updates.quantitative_score >= 20) updates.severity_level = 'Critical';
-      else if (updates.quantitative_score >= 12) updates.severity_level = 'High';
-      else if (updates.quantitative_score >= 6) updates.severity_level = 'Medium';
-      else updates.severity_level = 'Low';
-    }
+    const updates = {};
+    if (control_name !== undefined) updates.control_name = control_name.trim();
+    if (risk_id !== undefined) updates.risk_id = risk_id || null;
+    if (jncsf_principle !== undefined) updates.jncsf_principle = jncsf_principle;
+    if (compliance_status !== undefined) updates.compliance_status = compliance_status;
+    if (notes !== undefined) updates.notes = notes?.trim() || null;
 
     const { data, error } = await supabase
-      .from('risks')
+      .from('compliance_controls')
       .update(updates)
       .eq('id', id)
       .eq('user_id', user.id)
@@ -39,7 +31,7 @@ export async function PUT(request, { params }) {
       .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    if (!data) return NextResponse.json({ error: 'Risk not found' }, { status: 404 });
+    if (!data) return NextResponse.json({ error: 'Control not found' }, { status: 404 });
 
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
@@ -47,7 +39,7 @@ export async function PUT(request, { params }) {
   }
 }
 
-export async function DELETE(_request, { params }) {
+export async function DELETE(request, { params }) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -55,18 +47,12 @@ export async function DELETE(_request, { params }) {
 
     const { id } = await params;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const { error } = await supabase
+      .from('compliance_controls')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
 
-    const isAdmin = ['admin', 'super_admin'].includes(profile?.role);
-
-    let query = supabase.from('risks').delete().eq('id', id);
-    if (!isAdmin) query = query.eq('user_id', user.id);
-
-    const { error } = await query;
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     return NextResponse.json({ success: true }, { status: 200 });

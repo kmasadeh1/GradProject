@@ -24,7 +24,7 @@ export default function Settings({ onAvatarUpdate, currentAvatar, userRole }) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.access_token) {
           try {
-            const res = await fetch('http://localhost:3000/api/profile', {
+            const res = await fetch('/api/profile', {
               headers: { 'Authorization': `Bearer ${session.access_token}` },
             });
             if (res.ok) {
@@ -56,8 +56,7 @@ export default function Settings({ onAvatarUpdate, currentAvatar, userRole }) {
         payload.role = role;
       }
       
-      console.log("📤 SENDING TO API:", payload);
-      const res = await fetch('http://localhost:3000/api/profile', {
+      const res = await fetch('/api/profile', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

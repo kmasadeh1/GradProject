@@ -25,13 +25,13 @@ export default function WaiverModal({ risk, onClose, onSuccess }) {
     }
 
     try {
-      const res = await fetch('http://localhost:3000/api/risks/exceptions', {
+      const res = await fetch('/api/risks/exceptions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ risk_id: risk.id, justification: sanitizeInput(justification), expiration })
+        body: JSON.stringify({ risk_id: risk.id, justification: sanitizeInput(justification), expiration_date: expiration })
       });
 
       if (res.ok) {

@@ -1,28 +1,46 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+const RISK_COLUMNS =
+  'id, title, description, jncsf_capability, likelihood, impact, quantitative_score, severity_level, status, source, user_id, created_at';
+
 export async function GET() {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Authentication required', code: 'UNAUTHENTICATED' }, { status: 401 });
 
-    const { data: risks, error: risksError } = await supabase
-      .from('risks')
-      .select('*')
-      .order('quantitative_score', { ascending: false, nullsFirst: false });
+    // Fetch risks and evidence concurrently — no sequential waterfall
+    const [risksResult, evidenceResult] = await Promise.all([
+      supabase
+        .from('risks')
+        .select(RISK_COLUMNS)
+        .order('quantitative_score', { ascending: false, nullsFirst: false }),
+      supabase
+        .from('evidence_documentation')
+        .select('risk_id, file_url'),
+    ]);
 
-    if (risksError) return NextResponse.json({ error: 'Failed to fetch risks', details: risksError.message }, { status: 500 });
+    if (risksResult.error) {
+      return NextResponse.json(
+        { error: 'Failed to fetch risks', details: risksResult.error.message },
+        { status: 500 }
+      );
+    }
 
-    const { data: evidence } = await supabase.from('evidence_documentation').select('risk_id, file_url');
+    const evidenceByRisk = {};
+    for (const e of evidenceResult.data ?? []) {
+      if (!evidenceByRisk[e.risk_id]) evidenceByRisk[e.risk_id] = [];
+      evidenceByRisk[e.risk_id].push(e.file_url);
+    }
 
-    const risksWithEvidence = (risks || []).map((risk) => ({
+    const risksWithEvidence = (risksResult.data ?? []).map((risk) => ({
       ...risk,
-      file_urls: (evidence || []).filter((e) => e.risk_id === risk.id).map((e) => e.file_url),
+      file_urls: evidenceByRisk[risk.id] ?? [],
     }));
 
     return NextResponse.json(risksWithEvidence, { status: 200 });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -66,7 +84,7 @@ export async function POST(request) {
         source: 'Manual',
         status: 'Open',
       })
-      .select()
+      .select(RISK_COLUMNS)
       .maybeSingle();
 
     if (error) {

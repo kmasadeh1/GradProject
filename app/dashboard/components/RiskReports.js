@@ -74,23 +74,8 @@ export default function RiskReports() {
         styles: { fontSize: 9, cellPadding: 4 },
       });
 
-      const img = new Image();
-      img.src = '/logo.png'; // Ensure this matches the file in the public folder
-      img.onload = () => {
-        // Add image at top right (x, y, width, height). Adjust dimensions as needed.
-        doc.addImage(img, 'PNG', pageWidth - 45, 10, 30, 10);
-        
-        // Save the document ONLY after the image has loaded
-        doc.save('FortiGRC_Risk_Report.pdf');
-        setExporting(''); // Reset after save
-      };
-      
-      // Fallback in case the image fails to load so the app doesn't freeze
-      img.onerror = () => {
-        console.error('Failed to load logo for PDF');
-        doc.save('FortiGRC_Risk_Report.pdf'); 
-        setExporting(''); // Reset after save
-      };
+      doc.save('FortiGRC_Risk_Report.pdf');
+      setExporting('');
     } catch (err) {
       console.error('PDF export error:', err);
       alert(`Export failed: ${err.message}`);

@@ -1,12 +1,17 @@
-export const dynamic = 'force-dynamic';
-
-import AdminClient from './AdminClient';
+import { getServerProfile } from '@/lib/getServerProfile';
+import DashboardShell from '@/app/components/DashboardShell';
+import AdminPanel from '@/app/dashboard/components/AdminPanel';
 
 export const metadata = {
-  title: 'User Management - FortiGRC',
-  description: 'Admin panel for managing user roles.',
+  title: 'Admin Panel - FortiGRC',
+  description: 'Admin panel for managing user roles and waiver requests.',
 };
 
-export default function AdminPage() {
-  return <AdminClient />;
+export default async function AdminPage() {
+  const { user, profile } = await getServerProfile();
+  return (
+    <DashboardShell title="Admin Panel" userEmail={user?.email ?? ''} profile={profile}>
+      <AdminPanel userRole={profile.role} currentUserId={user?.id} />
+    </DashboardShell>
+  );
 }

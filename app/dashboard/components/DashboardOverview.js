@@ -14,32 +14,8 @@ const SEVERITY_COLORS = {
 };
 
 export default function DashboardOverview() {
-  const [activeWaiversCount, setActiveWaiversCount] = useState(0);
   const [risks, setRisks] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Fetch waivers
-  useEffect(() => {
-    async function fetchWaivers() {
-      try {
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          const res = await fetch('/api/risks/exceptions', {
-            headers: { 'Authorization': `Bearer ${session.access_token}` }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            const active = Array.isArray(data) ? data.filter(d => d.status === 'Approved').length : 0;
-            setActiveWaiversCount(active);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch waivers:', err);
-      }
-    }
-    fetchWaivers();
-  }, []);
 
   // Fetch risks
   useEffect(() => {
@@ -70,10 +46,10 @@ export default function DashboardOverview() {
   // Computed metrics (case-insensitive severity matching)
   const safeData = Array.isArray(risks) ? risks : [];
   const total = safeData.length;
-  const criticalCount = safeData.filter(r => (r.severity || '').toLowerCase() === 'critical').length;
-  const highCount = safeData.filter(r => (r.severity || '').toLowerCase() === 'high').length;
-  const mediumCount = safeData.filter(r => (r.severity || '').toLowerCase() === 'medium').length;
-  const lowCount = safeData.filter(r => (r.severity || '').toLowerCase() === 'low').length;
+  const criticalCount = safeData.filter(r => (r.severity_level || '').toLowerCase() === 'critical').length;
+  const highCount = safeData.filter(r => (r.severity_level || '').toLowerCase() === 'high').length;
+  const mediumCount = safeData.filter(r => (r.severity_level || '').toLowerCase() === 'medium').length;
+  const lowCount = safeData.filter(r => (r.severity_level || '').toLowerCase() === 'low').length;
   const mitigatedCount = safeData.filter(r => r.status === 'Mitigated' || r.status === 'Resolved').length;
 
   // Donut chart — format exactly how Recharts likes it, with inline colors
@@ -89,7 +65,7 @@ export default function DashboardOverview() {
 
   // Bar chart data — group by category, fallback to source value, then status
   const groupCounts = safeData.reduce((acc, r) => {
-    const key = r.category || r.source || r.status || 'Unknown';
+    const key = r.severity_level || r.category || r.source || 'Unknown';
     acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {});
@@ -98,9 +74,9 @@ export default function DashboardOverview() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
-  const groupLabel = safeData.some(r => r.category) ? 'category'
-    : safeData.some(r => r.source) ? 'source'
-    : 'status';
+  const groupLabel = safeData.some(r => r.severity_level) ? 'severity'
+    : safeData.some(r => r.category) ? 'category'
+    : 'source';
 
   const metricCards = [
     { label: 'Total Risks',    value: loading ? '…' : total,          icon: 'fa-shield',             bg: 'bg-blue-50',    color: 'text-blue-600',    id: 'stat-total'     },
@@ -112,35 +88,36 @@ export default function DashboardOverview() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="mb-2 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
-          <p className="text-gray-500 text-sm">Overview of your organization&apos;s risk posture</p>
-        </div>
-        {activeWaiversCount > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 px-4 py-2 rounded-lg flex items-center shadow-sm">
-            <i className="fa-solid fa-file-shield text-yellow-600 mr-2"></i>
-            <span className="text-sm font-medium text-yellow-800">
-              {activeWaiversCount} risk{activeWaiversCount !== 1 ? 's' : ''} excluded due to active waivers
-            </span>
-          </div>
-        )}
+      <div className="mb-2">
+        <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
+        <p className="text-gray-500 text-sm">Overview of your organization&apos;s risk posture</p>
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {metricCards.map(card => (
-          <div key={card.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start">
-            <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{card.label}</p>
-              <h3 className="text-3xl font-bold mt-2 text-gray-800" id={card.id}>{card.value}</h3>
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-pulse">
+              <div className="h-3 bg-gray-200 rounded w-24 mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded w-16"></div>
             </div>
-            <div className={`p-2 ${card.bg} rounded-lg ${card.color} h-10 w-10 flex items-center justify-center flex-shrink-0`}>
-              <i className={`fa-solid ${card.icon}`}></i>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {metricCards.map(card => (
+            <div key={card.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{card.label}</p>
+                <h3 className="text-3xl font-bold mt-2 text-gray-800" id={card.id}>{card.value}</h3>
+              </div>
+              <div className={`p-2 ${card.bg} rounded-lg ${card.color} h-10 w-10 flex items-center justify-center flex-shrink-0`}>
+                <i className={`fa-solid ${card.icon}`}></i>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

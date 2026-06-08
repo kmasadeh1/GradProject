@@ -8,8 +8,8 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       isDev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
-      "style-src 'self' 'unsafe-inline'",
-      "font-src 'self' data:",
+      "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
+      "font-src 'self' data: https://cdnjs.cloudflare.com",
       "img-src 'self' data: blob: https://*.supabase.co",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co http://localhost:3000 http://localhost:3001",
       "frame-ancestors 'none'",
